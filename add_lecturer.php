@@ -4,8 +4,9 @@ if (!isset($_SESSION["authenticated"]) || !$_SESSION["authenticated"]) {
     header("Location: login.php");
     exit;
 }
+//csrf secure
 if (!isset($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = uniqid('',true);
+    $_SESSION['csrf_token'] = uniqid("",true);
 }
 
 include "mysql_conn.php";
@@ -13,15 +14,14 @@ $mysql_obj = new mysql_conn();
 $mysql = $mysql_obj->GetConn();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Validate CSRF token
     if(!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-        // Invalid CSRF token, handle error (e.g., log, redirect, or show an error message)
         die("CSRF Token Validation Failed");
     }
+    //sql injection addslashes secure
+    $name = addslashes($_POST["name"]);
+    $mailbox_number = addslashes($_POST["mailbox_number"]);
+    $phone_number = addslashes($_POST["phone_number"]);
 
-    $name = $_POST["name"];
-    $mailbox_number = $_POST["mailbox_number"];
-    $phone_number = $_POST["phone_number"];
     $sql = "INSERT INTO lecturers_data (name, mailbox_number, phone_number)
             VALUES ('$name', '$mailbox_number', '$phone_number')";
     if ($mysql->query($sql) === TRUE) {
@@ -58,7 +58,7 @@ $mysql->close();
     input {
         font-size: 20px;
         font-weight: bold;
-        color: #150000;
+        color: #150000; /* Change the link color */
         border: 2px solid;
         padding: 10px;
         border-radius: 8px;
@@ -84,6 +84,7 @@ $mysql->close();
     }
 </style>
 <h2>הוספת מרצה חדש</h2>
+<!--xss secure-->
 <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
     <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
     <label>שם מרצה<input type="text" name="name" placeholder="&#128522;Name......" required><br></label>
